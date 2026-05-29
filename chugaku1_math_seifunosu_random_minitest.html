@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>中1数学 正負の数ランダムミニテスト</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+      background: #f4f6fb;
+      color: #222;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .app {
+      width: 100%;
+      max-width: 680px;
+      background: #fff;
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    }
+    h1 { margin: 0 0 8px; font-size: 28px; text-align: center; }
+    .subtitle { text-align: center; color: #666; margin-bottom: 22px; font-size: 16px; }
+    .settings {
+      background: #f7f8fc;
+      border-radius: 18px;
+      padding: 14px;
+      margin-bottom: 18px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items: end;
+    }
+    label { font-size: 14px; color: #555; font-weight: bold; }
+    select {
+      width: 100%;
+      margin-top: 6px;
+      font-size: 16px;
+      padding: 10px;
+      border: 2px solid #d7deea;
+      border-radius: 12px;
+      background: #fff;
+    }
+    .status { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 20px; font-size: 16px; }
+    .badge { background: #eef2ff; padding: 10px 14px; border-radius: 999px; font-weight: bold; }
+    .question-box { background: #fff8e8; border-radius: 20px; padding: 30px 16px; text-align: center; margin-bottom: 20px; }
+    .question-label { font-size: 16px; color: #666; margin-bottom: 8px; }
+    .question { font-size: 44px; font-weight: bold; letter-spacing: 1px; }
+    input[type="number"] { width: 100%; font-size: 30px; padding: 16px; border: 2px solid #ccd3e0; border-radius: 16px; text-align: center; margin-bottom: 16px; }
+    button { width: 100%; border: none; border-radius: 16px; padding: 16px; font-size: 20px; font-weight: bold; cursor: pointer; margin-bottom: 12px; }
+    .primary { background: #2f6fed; color: white; }
+    .secondary { background: #e8edf8; color: #25314d; }
+    .message { min-height: 80px; padding: 16px; border-radius: 16px; background: #f3f5f9; font-size: 18px; line-height: 1.6; margin-top: 4px; }
+    .correct { background: #e9f8ee; color: #146c2e; }
+    .wrong { background: #fff0f0; color: #9d1c1c; }
+    .result { text-align: center; font-size: 26px; font-weight: bold; margin: 20px 0; line-height: 1.6; }
+    .history { font-size: 15px; background: #f7f8fc; border-radius: 16px; padding: 14px; line-height: 1.8; margin: 16px 0; }
+    .hidden { display: none; }
+    .small-note { margin-top: 18px; font-size: 13px; color: #777; text-align: center; line-height: 1.6; }
+    @media (max-width: 520px) {
+      .app { padding: 20px; border-radius: 20px; }
+      .settings { grid-template-columns: 1fr; }
+      .question { font-size: 36px; }
+      h1 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <h1>中1数学 基礎トレーニング</h1>
+    <div class="subtitle">正負の数｜ランダムミニテスト</div>
+
+    <section id="quizArea">
+      <div class="settings">
+        <div>
+          <label for="levelSelect">数字の範囲</label>
+          <select id="levelSelect">
+            <option value="10">-10 〜 10</option>
+            <option value="20">-20 〜 20</option>
+            <option value="50">-50 〜 50</option>
+          </select>
+        </div>
+        <div>
+          <label for="typeSelect">問題の種類</label>
+          <select id="typeSelect">
+            <option value="addsub">たし算・ひき算</option>
+            <option value="add">たし算だけ</option>
+            <option value="sub">ひき算だけ</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="status">
+        <div class="badge">問題 <span id="questionNumber">1</span> / 10</div>
+        <div class="badge">正解 <span id="score">0</span> 問</div>
+      </div>
+
+      <div class="question-box">
+        <div class="question-label">次の計算をしなさい</div>
+        <div class="question" id="questionText">-3 + 8 = ?</div>
+      </div>
+
+      <input id="answerInput" type="number" inputmode="numeric" placeholder="答えを入力" />
+      <button class="primary" id="checkButton">答え合わせ</button>
+      <button class="secondary hidden" id="nextButton">次の問題へ</button>
+      <div class="message" id="message">答えを入力して「答え合わせ」を押してください。</div>
+    </section>
+
+    <section id="resultArea" class="hidden">
+      <div class="result" id="finalResult"></div>
+      <div class="history" id="history"></div>
+      <button class="primary" id="restartButton">もう一度チャレンジ</button>
+    </section>
+
+    <div class="small-note">
+      サーバー不要。HTMLファイルをタブレットで開くだけで使えます。<br>
+      問題は毎回ランダムに作られます。
+    </div>
+  </main>
+
+  <script>
+    const totalQuestions = 10;
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let currentQuestion = null;
+    let answered = false;
+    let results = [];
+    let usedQuestions = new Set();
+
+    const questionNumber = document.getElementById('questionNumber');
+    const scoreDisplay = document.getElementById('score');
+    const questionText = document.getElementById('questionText');
+    const answerInput = document.getElementById('answerInput');
+    const checkButton = document.getElementById('checkButton');
+    const nextButton = document.getElementById('nextButton');
+    const message = document.getElementById('message');
+    const quizArea = document.getElementById('quizArea');
+    const resultArea = document.getElementById('resultArea');
+    const finalResult = document.getElementById('finalResult');
+    const restartButton = document.getElementById('restartButton');
+    const levelSelect = document.getElementById('levelSelect');
+    const typeSelect = document.getElementById('typeSelect');
+    const history = document.getElementById('history');
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function formatNumber(n) {
+      return n < 0 ? `(${n})` : `${n}`;
+    }
+
+    function chooseOperator() {
+      const type = typeSelect.value;
+      if (type === 'add') return '+';
+      if (type === 'sub') return '-';
+      return Math.random() < 0.5 ? '+' : '-';
+    }
+
+    function makeQuestion() {
+      const range = Number(levelSelect.value);
+      let q;
+      let key;
+      let tries = 0;
+
+      do {
+        const a = randomInt(-range, range);
+        let b = randomInt(-range, range);
+        while (b === 0) b = randomInt(-range, range);
+        const operator = chooseOperator();
+        const answer = operator === '+' ? a + b : a - b;
+        const text = `${a} ${operator} ${formatNumber(b)} = ?`;
+        q = { text, answer, a, b, operator };
+        key = `${a}${operator}${b}`;
+        tries++;
+      } while (usedQuestions.has(key) && tries < 100);
+
+      usedQuestions.add(key);
+      return q;
+    }
+
+    function makeExplanation(q) {
+      if (q.operator === '+') {
+        return `${q.a} に ${q.b} をたします。答えは ${q.answer} です。`;
+      }
+      return `${q.a} から ${q.b} をひきます。ひき算は「逆の数をたす」と考えられます。答えは ${q.answer} です。`;
+    }
+
+    function showQuestion() {
+      answered = false;
+      currentQuestion = makeQuestion();
+      currentQuestionIndex++;
+      questionNumber.textContent = currentQuestionIndex;
+      scoreDisplay.textContent = score;
+      questionText.textContent = currentQuestion.text;
+      answerInput.value = '';
+      answerInput.disabled = false;
+      answerInput.focus();
+      message.className = 'message';
+      message.textContent = '答えを入力して「答え合わせ」を押してください。';
+      checkButton.classList.remove('hidden');
+      nextButton.classList.add('hidden');
+      levelSelect.disabled = currentQuestionIndex > 1;
+      typeSelect.disabled = currentQuestionIndex > 1;
+    }
+
+    function checkAnswer() {
+      if (answered) return;
+      if (answerInput.value === '') {
+        message.className = 'message wrong';
+        message.textContent = '答えを入力してください。';
+        return;
+      }
+
+      const userAnswer = Number(answerInput.value);
+      answered = true;
+      answerInput.disabled = true;
+      checkButton.classList.add('hidden');
+      nextButton.classList.remove('hidden');
+
+      const isCorrect = userAnswer === currentQuestion.answer;
+      if (isCorrect) {
+        score++;
+        scoreDisplay.textContent = score;
+        message.className = 'message correct';
+        message.textContent = `正解！ ${makeExplanation(currentQuestion)}`;
+      } else {
+        message.className = 'message wrong';
+        message.textContent = `不正解。正解は ${currentQuestion.answer} です。${makeExplanation(currentQuestion)}`;
+      }
+
+      results.push({
+        text: currentQuestion.text.replace('?', ''),
+        correctAnswer: currentQuestion.answer,
+        userAnswer,
+        isCorrect
+      });
+
+      nextButton.textContent = currentQuestionIndex === totalQuestions ? '結果を見る' : '次の問題へ';
+    }
+
+    function nextQuestion() {
+      currentQuestionIndex >= totalQuestions ? showResult() : showQuestion();
+    }
+
+    function showResult() {
+      quizArea.classList.add('hidden');
+      resultArea.classList.remove('hidden');
+
+      let comment = '';
+      if (score === 10) comment = 'すばらしい！満点です！';
+      else if (score >= 8) comment = 'よくできました！あと少しで満点です。';
+      else if (score >= 5) comment = 'まずまずです。もう一度やると伸びます。';
+      else comment = 'ここから練習していきましょう。';
+
+      finalResult.innerHTML = `10問中 ${score} 問正解<br>${comment}`;
+      history.innerHTML = '<strong>今回の問題</strong><br>' + results.map((r, i) => {
+        const mark = r.isCorrect ? '○' : '×';
+        return `${i + 1}. ${mark} ${r.text} ${r.correctAnswer}（入力：${r.userAnswer}）`;
+      }).join('<br>');
+    }
+
+    function restartQuiz() {
+      currentQuestionIndex = 0;
+      score = 0;
+      answered = false;
+      results = [];
+      usedQuestions = new Set();
+      resultArea.classList.add('hidden');
+      quizArea.classList.remove('hidden');
+      nextButton.textContent = '次の問題へ';
+      levelSelect.disabled = false;
+      typeSelect.disabled = false;
+      showQuestion();
+    }
+
+    checkButton.addEventListener('click', checkAnswer);
+    nextButton.addEventListener('click', nextQuestion);
+    restartButton.addEventListener('click', restartQuiz);
+    answerInput.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') answered ? nextQuestion() : checkAnswer();
+    });
+
+    showQuestion();
+  </script>
+</body>
+</html>
