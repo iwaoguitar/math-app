@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>中学数学 基礎トレーニング</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+      background: #f4f6fb;
+      color: #222;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .app {
+      width: 100%;
+      max-width: 720px;
+      background: #fff;
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    }
+    h1 { margin: 0 0 8px; font-size: 28px; text-align: center; }
+    .subtitle { text-align: center; color: #666; margin-bottom: 22px; font-size: 16px; }
+    .settings {
+      background: #f7f8fc;
+      border-radius: 18px;
+      padding: 14px;
+      margin-bottom: 18px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items: end;
+    }
+    label { font-size: 14px; color: #555; font-weight: bold; }
+    select {
+      width: 100%;
+      margin-top: 6px;
+      font-size: 16px;
+      padding: 10px;
+      border: 2px solid #d7deea;
+      border-radius: 12px;
+      background: #fff;
+    }
+    .status { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 20px; font-size: 16px; flex-wrap: wrap; }
+    .badge { background: #eef2ff; padding: 10px 14px; border-radius: 999px; font-weight: bold; }
+    .question-box { background: #fff8e8; border-radius: 20px; padding: 30px 16px; text-align: center; margin-bottom: 20px; }
+    .question-label { font-size: 16px; color: #666; margin-bottom: 8px; }
+    .question { font-size: 44px; font-weight: bold; letter-spacing: 1px; line-height: 1.3; }
+    input[type="number"] { width: 100%; font-size: 30px; padding: 16px; border: 2px solid #ccd3e0; border-radius: 16px; text-align: center; margin-bottom: 16px; }
+    button { width: 100%; border: none; border-radius: 16px; padding: 16px; font-size: 20px; font-weight: bold; cursor: pointer; margin-bottom: 12px; }
+    .primary { background: #2f6fed; color: white; }
+    .secondary { background: #e8edf8; color: #25314d; }
+    .message { min-height: 80px; padding: 16px; border-radius: 16px; background: #f3f5f9; font-size: 18px; line-height: 1.6; margin-top: 4px; }
+    .correct { background: #e9f8ee; color: #146c2e; }
+    .wrong { background: #fff0f0; color: #9d1c1c; }
+    .result { text-align: center; font-size: 26px; font-weight: bold; margin: 20px 0; line-height: 1.6; }
+    .history { font-size: 15px; background: #f7f8fc; border-radius: 16px; padding: 14px; line-height: 1.8; margin: 16px 0; }
+    .hidden { display: none; }
+    .small-note { margin-top: 18px; font-size: 13px; color: #777; text-align: center; line-height: 1.6; }
+    .mode-note { color: #2f6fed; font-weight: bold; text-align: center; margin: 0 0 14px; }
+    @media (max-width: 520px) {
+      .app { padding: 20px; border-radius: 20px; }
+      .settings { grid-template-columns: 1fr; }
+      .question { font-size: 34px; }
+      h1 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <h1>中学数学 基礎トレーニング</h1>
+    <div class="subtitle">ランダムミニテスト</div>
+
+    <section id="settingArea">
+      <div class="settings">
+        <div>
+          <label for="gradeSelect">学年</label>
+          <select id="gradeSelect">
+            <option value="j1">中学1年</option>
+            <option value="j2">中学2年</option>
+            <option value="j3">中学3年</option>
+          </select>
+        </div>
+        <div>
+          <label for="unitSelect">単元</label>
+          <select id="unitSelect"></select>
+        </div>
+        <div>
+          <label for="levelSelect">数字の範囲</label>
+          <select id="levelSelect">
+            <option value="10">-10 〜 10</option>
+            <option value="20">-20 〜 20</option>
+            <option value="50">-50 〜 50</option>
+          </select>
+        </div>
+        <div>
+          <label for="soundSelect">効果音</label>
+          <select id="soundSelect">
+            <option value="on">あり</option>
+            <option value="off">なし</option>
+          </select>
+        </div>
+      </div>
+      <button class="primary" id="startButton">この設定でテスト開始</button>
+    </section>
+
+    <section id="quizArea" class="hidden">
+      <div id="modeNote" class="mode-note hidden">間違えた問題の復習モード</div>
+
+      <div class="status">
+        <div class="badge">問題 <span id="questionNumber">1</span> / <span id="totalNumber">10</span></div>
+        <div class="badge">正解 <span id="score">0</span> 問</div>
+      </div>
+
+      <div class="question-box">
+        <div class="question-label">次の問題を解きなさい</div>
+        <div class="question" id="questionText">準備中</div>
+      </div>
+
+      <input id="answerInput" type="number" inputmode="numeric" placeholder="答えを入力" />
+      <button class="primary" id="checkButton">答え合わせ</button>
+      <button class="secondary hidden" id="nextButton">次の問題へ</button>
+      <div class="message" id="message">答えを入力して「答え合わせ」を押してください。</div>
+    </section>
+
+    <section id="resultArea" class="hidden">
+      <div class="result" id="finalResult"></div>
+      <div class="history" id="history"></div>
+      <button class="primary hidden" id="reviewButton">間違えた問題を復習する</button>
+      <button class="secondary" id="restartButton">設定に戻る</button>
+    </section>
+
+    <div class="small-note">
+      GitHub Pagesで公開して、iPadのSafariから使えます。<br>
+      効果音は音声ファイルなしで鳴ります。
+    </div>
+  </main>
+
+  <script>
+    var totalQuestions = 10;
+    var currentQuestionIndex = 0;
+    var score = 0;
+    var currentQuestion = null;
+    var answered = false;
+    var results = [];
+    var reviewMode = false;
+    var reviewQuestions = [];
+
+    var units = {
+      j1: [
+        { value: "seifu_addsub", label: "正負の数｜たし算・ひき算" },
+        { value: "seifu_muldiv", label: "正負の数｜かけ算・わり算" },
+        { value: "seifu_mix", label: "正負の数｜四則ミックス" },
+        { value: "equation_basic", label: "一次方程式｜基本" }
+      ],
+      j2: [
+        { value: "j2_calc", label: "式の計算｜基本" },
+        { value: "j2_equation", label: "連立方程式｜基本" }
+      ],
+      j3: [
+        { value: "j3_expand", label: "展開｜基本" },
+        { value: "j3_factor", label: "因数分解｜基本" }
+      ]
+    };
+
+    var settingArea = document.getElementById("settingArea");
+    var quizArea = document.getElementById("quizArea");
+    var resultArea = document.getElementById("resultArea");
+    var startButton = document.getElementById("startButton");
+    var gradeSelect = document.getElementById("gradeSelect");
+    var unitSelect = document.getElementById("unitSelect");
+    var levelSelect = document.getElementById("levelSelect");
+    var soundSelect = document.getElementById("soundSelect");
+    var questionNumber = document.getElementById("questionNumber");
+    var totalNumber = document.getElementById("totalNumber");
+    var scoreDisplay = document.getElementById("score");
+    var questionText = document.getElementById("questionText");
+    var answerInput = document.getElementById("answerInput");
+    var checkButton = document.getElementById("checkButton");
+    var nextButton = document.getElementById("nextButton");
+    var message = document.getElementById("message");
+    var finalResult = document.getElementById("finalResult");
+    var restartButton = document.getElementById("restartButton");
+    var reviewButton = document.getElementById("reviewButton");
+    var history = document.getElementById("history");
+    var modeNote = document.getElementById("modeNote");
+
+    function updateUnitOptions() {
+      var grade = gradeSelect.value;
+      unitSelect.innerHTML = "";
+      for (var i = 0; i < units[grade].length; i++) {
+        var opt = document.createElement("option");
+        opt.value = units[grade][i].value;
+        opt.textContent = units[grade][i].label;
+        unitSelect.appendChild(opt);
+      }
+    }
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function nonZero(min, max) {
+      var n = 0;
+      while (n === 0) n = randomInt(min, max);
+      return n;
+    }
+
+    function formatNumber(n) {
+      return n < 0 ? "(" + n + ")" : String(n);
+    }
+
+    function makeSeifuAddSub() {
+      var range = Number(levelSelect.value);
+      var a = randomInt(-range, range);
+      var b = nonZero(-range, range);
+      var op = Math.random() < 0.5 ? "+" : "-";
+      var answer = op === "+" ? a + b : a - b;
+      return {
+        text: a + " " + op + " " + formatNumber(b) + " = ?",
+        answer: answer,
+        explanation: op === "+" ? a + " に " + b + " をたします。" : a + " から " + b + " をひきます。ひき算は逆の数をたすと考えられます。"
+      };
+    }
+
+    function makeSeifuMulDiv() {
+      var a = nonZero(-12, 12);
+      var b = nonZero(-12, 12);
+      var isMul = Math.random() < 0.5;
+      if (isMul) {
+        return {
+          text: a + " × " + formatNumber(b) + " = ?",
+          answer: a * b,
+          explanation: "同じ符号ならプラス、ちがう符号ならマイナスです。"
+        };
+      }
+      var answer = a;
+      var left = a * b;
+      return {
+        text: left + " ÷ " + formatNumber(b) + " = ?",
+        answer: answer,
+        explanation: "わり算も、同じ符号ならプラス、ちがう符号ならマイナスです。"
+      };
+    }
+
+    function makeSeifuMix() {
+      var r = Math.random();
+      if (r < 0.34) return makeSeifuAddSub();
+      if (r < 0.67) return makeSeifuMulDiv();
+      var a = randomInt(-10, 10);
+      var b = nonZero(-10, 10);
+      var c = nonZero(-10, 10);
+      return {
+        text: a + " + " + formatNumber(b) + " × " + formatNumber(c) + " = ?",
+        answer: a + b * c,
+        explanation: "かけ算・わり算を先に計算します。"
+      };
+    }
+
+    function makeEquationBasic() {
+      var x = randomInt(-10, 10);
+      var a = nonZero(-9, 9);
+      var b = randomInt(-20, 20);
+      var right = a * x + b;
+      return {
+        text: a + "x " + (b >= 0 ? "+ " + b : "- " + Math.abs(b)) + " = " + right + "　x = ?",
+        answer: x,
+        explanation: "まず数字の部分を移項して、最後にxの係数でわります。"
+      };
+    }
+
+    function makeJ2Calc() {
+      var a = randomInt(1, 9);
+      var b = randomInt(1, 9);
+      var c = randomInt(1, 9);
+      var d = randomInt(1, 9);
+      return {
+        text: a + "x + " + b + "x + " + c + " - " + d + " = ?　※ xの係数を答える",
+        answer: a + b,
+        explanation: "同じ文字の項だけをまとめます。今回はxの係数を答えます。"
+      };
+    }
+
+    function makeJ2Equation() {
+      var x = randomInt(-5, 5);
+      var y = randomInt(-5, 5);
+      var right1 = x + y;
+      var right2 = x - y;
+      var askX = Math.random() < 0.5;
+      return {
+        text: "x+y=" + right1 + ", x-y=" + right2 + "　" + (askX ? "x" : "y") + " = ?",
+        answer: askX ? x : y,
+        explanation: "2つの式をたしたり、ひいたりして、文字を1つ消します。"
+      };
+    }
+
+    function makeJ3Expand() {
+      var a = randomInt(1, 9);
+      var b = randomInt(1, 9);
+      return {
+        text: "(x+" + a + ")(x+" + b + ") の x の係数は？",
+        answer: a + b,
+        explanation: "(x+a)(x+b)=x²+(a+b)x+ab です。"
+      };
+    }
+
+    function makeJ3Factor() {
+      var a = randomInt(1, 9);
+      var b = randomInt(1, 9);
+      var sum = a + b;
+      var product = a * b;
+      return {
+        text: "x²+" + sum + "x+" + product + "=(x+□)(x+？)　□に入る小さい方の数は？",
+        answer: Math.min(a, b),
+        explanation: "たして " + sum + "、かけて " + product + " になる2つの数を探します。"
+      };
+    }
+
+    function makeQuestion() {
+      var unit = unitSelect.value;
+      if (unit === "seifu_addsub") return makeSeifuAddSub();
+      if (unit === "seifu_muldiv") return makeSeifuMulDiv();
+      if (unit === "seifu_mix") return makeSeifuMix();
+      if (unit === "equation_basic") return makeEquationBasic();
+      if (unit === "j2_calc") return makeJ2Calc();
+      if (unit === "j2_equation") return makeJ2Equation();
+      if (unit === "j3_expand") return makeJ3Expand();
+      if (unit === "j3_factor") return makeJ3Factor();
+      return makeSeifuAddSub();
+    }
+
+    function playTone(kind) {
+      if (soundSelect.value === "off") return;
+      try {
+        var AudioContext = window.AudioContext || window.webkitAudioContext;
+        var ctx = new AudioContext();
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (kind === "correct") {
+          osc.frequency.setValueAtTime(660, ctx.currentTime);
+          osc.frequency.setValueAtTime(880, ctx.currentTime + 0.08);
+        } else {
+          osc.frequency.setValueAtTime(220, ctx.currentTime);
+          osc.frequency.setValueAtTime(160, ctx.currentTime + 0.08);
+        }
+
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.23);
+      } catch (e) {}
+    }
+
+    function startQuiz() {
+      reviewMode = false;
+      currentQuestionIndex = 0;
+      score = 0;
+      answered = false;
+      results = [];
+      settingArea.classList.add("hidden");
+      resultArea.classList.add("hidden");
+      quizArea.classList.remove("hidden");
+      modeNote.classList.add("hidden");
+      nextButton.textContent = "次の問題へ";
+      showQuestion();
+    }
+
+    function showQuestion() {
+      answered = false;
+      if (reviewMode) {
+        currentQuestion = reviewQuestions[currentQuestionIndex];
+      } else {
+        currentQuestion = makeQuestion();
+      }
+
+      currentQuestionIndex++;
+      questionNumber.textContent = currentQuestionIndex;
+      totalNumber.textContent = reviewMode ? reviewQuestions.length : totalQuestions;
+      scoreDisplay.textContent = score;
+      questionText.textContent = currentQuestion.text;
+      answerInput.value = "";
+      answerInput.disabled = false;
+      setTimeout(function(){ answerInput.focus(); }, 100);
+      message.className = "message";
+      message.textContent = "答えを入力して「答え合わせ」を押してください。";
+      checkButton.classList.remove("hidden");
+      nextButton.classList.add("hidden");
+    }
+
+    function checkAnswer() {
+      if (answered) return;
+      if (answerInput.value === "") {
+        message.className = "message wrong";
+        message.textContent = "答えを入力してください。";
+        return;
+      }
+
+      var userAnswer = Number(answerInput.value);
+      answered = true;
+      answerInput.disabled = true;
+      checkButton.classList.add("hidden");
+      nextButton.classList.remove("hidden");
+
+      var isCorrect = userAnswer === currentQuestion.answer;
+      if (isCorrect) {
+        score++;
+        scoreDisplay.textContent = score;
+        message.className = "message correct";
+        message.textContent = "正解！ " + currentQuestion.explanation + " 答えは " + currentQuestion.answer + " です。";
+        playTone("correct");
+      } else {
+        message.className = "message wrong";
+        message.textContent = "不正解。正解は " + currentQuestion.answer + " です。 " + currentQuestion.explanation;
+        playTone("wrong");
+      }
+
+      results.push({
+        text: currentQuestion.text.replace("?", ""),
+        correctAnswer: currentQuestion.answer,
+        userAnswer: userAnswer,
+        isCorrect: isCorrect,
+        questionObj: currentQuestion
+      });
+
+      var total = reviewMode ? reviewQuestions.length : totalQuestions;
+      nextButton.textContent = currentQuestionIndex === total ? "結果を見る" : "次の問題へ";
+    }
+
+    function nextQuestion() {
+      var total = reviewMode ? reviewQuestions.length : totalQuestions;
+      if (currentQuestionIndex >= total) showResult();
+      else showQuestion();
+    }
+
+    function showResult() {
+      quizArea.classList.add("hidden");
+      resultArea.classList.remove("hidden");
+
+      var total = reviewMode ? reviewQuestions.length : totalQuestions;
+      var comment = "";
+      if (score === total) comment = "すばらしい！満点です！";
+      else if (score >= Math.ceil(total * 0.8)) comment = "よくできました！あと少しで満点です。";
+      else if (score >= Math.ceil(total * 0.5)) comment = "まずまずです。もう一度やると伸びます。";
+      else comment = "ここから練習していきましょう。";
+
+      finalResult.innerHTML = total + "問中 " + score + " 問正解<br>" + comment;
+
+      history.innerHTML = "<strong>今回の問題</strong><br>" + results.map(function(r, i) {
+        var mark = r.isCorrect ? "○" : "×";
+        return (i + 1) + ". " + mark + " " + r.text + " " + r.correctAnswer + "（入力：" + r.userAnswer + "）";
+      }).join("<br>");
+
+      var wrongs = results.filter(function(r) { return !r.isCorrect; }).map(function(r) { return r.questionObj; });
+      if (!reviewMode && wrongs.length > 0) {
+        reviewQuestions = wrongs;
+        reviewButton.classList.remove("hidden");
+      } else {
+        reviewButton.classList.add("hidden");
+      }
+    }
+
+    function backToSettings() {
+      reviewMode = false;
+      currentQuestionIndex = 0;
+      score = 0;
+      results = [];
+      resultArea.classList.add("hidden");
+      quizArea.classList.add("hidden");
+      settingArea.classList.remove("hidden");
+      modeNote.classList.add("hidden");
+    }
+
+    function startReview() {
+      reviewMode = true;
+      currentQuestionIndex = 0;
+      score = 0;
+      answered = false;
+      results = [];
+      settingArea.classList.add("hidden");
+      resultArea.classList.add("hidden");
+      quizArea.classList.remove("hidden");
+      modeNote.classList.remove("hidden");
+      nextButton.textContent = "次の問題へ";
+      showQuestion();
+    }
+
+    gradeSelect.addEventListener("change", updateUnitOptions);
+    startButton.addEventListener("click", startQuiz);
+    checkButton.addEventListener("click", checkAnswer);
+    nextButton.addEventListener("click", nextQuestion);
+    restartButton.addEventListener("click", backToSettings);
+    reviewButton.addEventListener("click", startReview);
+    answerInput.addEventListener("keydown", function(event) {
+      if (event.key === "Enter") {
+        if (answered) nextQuestion();
+        else checkAnswer();
+      }
+    });
+
+    updateUnitOptions();
+  </script>
+</body>
+</html>
